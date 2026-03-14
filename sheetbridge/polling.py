@@ -3,7 +3,7 @@
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 import gspread
 
@@ -133,7 +133,7 @@ class SpreadsheetPoller:
                 spreadsheet_id=spreadsheet_id,
                 checksum=checksum,
                 modified_time=modified_time,
-                checked_at=datetime.utcnow().isoformat(),
+                checked_at=datetime.now(UTC).isoformat(),
             )
 
         self._states[spreadsheet_id] = state
@@ -172,7 +172,7 @@ class SpreadsheetPoller:
             spreadsheet_id=spreadsheet_id,
             checksum=new_checksum,
             modified_time=new_modified_time,
-            checked_at=datetime.utcnow().isoformat(),
+            checked_at=datetime.now(UTC).isoformat(),
         )
 
         if old_state is None:

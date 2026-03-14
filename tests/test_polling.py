@@ -109,23 +109,24 @@ def test_calculate_checksum_empty(poller, mock_spreadsheet, mock_worksheet):
 
 def test_get_modified_time_success(poller, mock_spreadsheet):
     """Test getting modified time from Drive API."""
-    mock_gspread_client = poller.client
-    mock_response = MagicMock()
-    mock_response.get.return_value = "2025-01-01T12:00:00Z"
+    mock_drive_service = MagicMock()
+    mock_drive_file = MagicMock()
+    mock_drive_file.get.return_value = "2025-01-01T12:00:00Z"
+    mock_drive_service.files().get().execute.return_value = mock_drive_file
 
-    mock_gspread_client.drive.files().get().execute.return_value = mock_response
-
-    modified_time = poller.get_modified_time(mock_spreadsheet)
+    with patch("googleapiclient.discovery.build", return_value=mock_drive_service):
+        modified_time = poller.get_modified_time(mock_spreadsheet)
 
     assert modified_time == "2025-01-01T12:00:00Z"
 
 
 def test_get_modified_time_failure(poller, mock_spreadsheet):
     """Test getting modified time when Drive API fails."""
-    mock_gspread_client = poller.client
-    mock_gspread_client.drive.files().get().execute.side_effect = Exception("API error")
+    mock_drive_service = MagicMock()
+    mock_drive_service.files().get().execute.side_effect = Exception("API error")
 
-    modified_time = poller.get_modified_time(mock_spreadsheet)
+    with patch("googleapiclient.discovery.build", return_value=mock_drive_service):
+        modified_time = poller.get_modified_time(mock_spreadsheet)
 
     assert modified_time is None
 
@@ -212,7 +213,13 @@ def test_check_for_changes_modified_time_only(poller, mock_spreadsheet, mock_wor
     mock_spreadsheet.worksheets.return_value = [mock_worksheet]
     poller.client.open_by_key.return_value = mock_spreadsheet
 
-    poller.check_for_changes("test_id", use_checksum=False, use_modified_time=True)
+    mock_drive_service = MagicMock()
+    mock_drive_file = MagicMock()
+    mock_drive_file.get.return_value = "2025-01-01T12:00:00Z"
+    mock_drive_service.files().get().execute.return_value = mock_drive_file
+
+    with patch("googleapiclient.discovery.build", return_value=mock_drive_service):
+        poller.check_for_changes("test_id", use_checksum=False, use_modified_time=True)
 
     assert "test_id" in poller._states
     assert poller._states["test_id"].modified_time is not None
