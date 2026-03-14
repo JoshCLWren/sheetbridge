@@ -70,7 +70,7 @@ def append_dataframe_rows(
     for row in df.itertuples(index=False, name=None):
         data.append(list(row))
 
-    worksheet.append_rows(data, value_input_option="USER_ENTERED")
+    worksheet.append_rows(data, value_input_option="USER_ENTERED")  # type: ignore[arg-type]
 
 
 def filter_dataframe_to_worksheet(
@@ -90,6 +90,6 @@ def filter_dataframe_to_worksheet(
     Returns:
         Filtered DataFrame.
     """
-    filtered = df[df[query_col] == query_val]
-    dataframe_to_worksheet(worksheet, filtered, include_index=False)
+    filtered: pd.DataFrame = df[df[query_col] == query_val].copy()  # type: ignore[assignment]
+    dataframe_to_worksheet(worksheet, filtered, include_index=False)  # type: ignore[arg-type]
     return filtered

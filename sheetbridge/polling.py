@@ -97,10 +97,12 @@ class SpreadsheetPoller:
             ISO timestamp of last modification, or None if unavailable.
         """
         try:
+            from googleapiclient.discovery import build  # type: ignore[import]
+
+            creds = self.client.auth  # type: ignore[attr-defined]
+            drive_service = build("drive", "v3", credentials=creds)
             drive_file = (
-                self.client.drive.files()
-                .get(fileId=spreadsheet.id, fields="modifiedTime")
-                .execute()
+                drive_service.files().get(fileId=spreadsheet.id, fields="modifiedTime").execute()
             )
             return drive_file.get("modifiedTime")
         except Exception:
